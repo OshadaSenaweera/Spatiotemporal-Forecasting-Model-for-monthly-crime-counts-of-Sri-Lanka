@@ -202,6 +202,6 @@ ggplot(var_imp_df, aes(x = reorder(variable, importance), y = importance)) +
   labs(
     title = "Variable Importance (Random Forest)",
     x = "Variable",
-    y = "Importance"
+    y = "Permutation importance"
   ) +
   theme_minimal()
