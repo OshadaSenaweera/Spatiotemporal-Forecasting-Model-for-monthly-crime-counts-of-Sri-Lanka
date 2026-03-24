@@ -52,15 +52,22 @@ pacf(crime_monthly$y, lag.max = 24)
 
 ################################################################################
 
-formula_m1 <- y_n ~ 1 + month_f + f(time_id, model="ar1") + f(st_id,model="iid")+
-                    f(area_id2, model = "besag", graph = g, group = time_id,
-                                     control.group = list(model = "ar1"))
+prec_pr = list(prior = "pc.prec", param = c(1, 0.01))
+rho_pr = list(prior = "pc.cor1", param = c(0.7, 0.7))
+phi_pr = list(prior = "pc", param = c(0.5, 2/3))
+
+formula_m1 <- y_n ~ 1 + month_f +
+  f(time_id,model = "ar1", hyper = list(prec = prec_pr))+
+  f(area_id,model = "besag",graph = g,scale.model = TRUE,hyper = list(prec = prec_pr))+
+  f(area_id2,model = "bym2",graph = g,scale.model = TRUE,
+    group = time_id, hyper = list(prec = prec_pr,phi  = phi_pr),
+    control.group = list(model = "ar1",hyper = list(theta1 = prec_pr,rho  = rho_pr)))
   
 sptm_m1 <- inla(
   formula_m1,
   family = "poisson",       #zeroinflatedpoisson1 #zeroinflatednbinomial1
   data = forecast_data,
-  offset = log(E),
+  offset = log(population),
   control.predictor = list(compute = TRUE,link = 1),
   control.compute = list(dic = TRUE, waic = TRUE, cpo = TRUE, config = TRUE),
   # safer numerical settings:
