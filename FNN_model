@@ -169,3 +169,64 @@ MAE  <- mean(abs(test_df$y - nn_pred))
 R2   <- 1 - sum((test_df$y - nn_pred)^2) / sum((test_df$y - mean(test_df$y))^2)
 
 c(RMSE = RMSE, MAE = MAE, R2 = R2)
+
+#-----------------------------------
+# 5. Actual vs Forecasted 
+#-----------------------------------
+
+test_df$nn_pred = nn_pred
+plot_df <- test_df %>%
+  filter(time_id %in% c(57, 58, 59)) %>%
+  mutate(
+    time_id = factor(
+      time_id,
+      levels = c(57, 58, 59),
+      labels = c("2023 September", "2023 October", "2023 November")
+    )
+  )
+
+stats_df <- plot_df %>%
+  group_by(time_id) %>%
+  summarise(
+    RMSE = sqrt(mean((y - nn_pred)^2, na.rm = TRUE)),
+    MAE  = mean(abs(y - nn_pred), na.rm = TRUE),
+    R2   = cor(y, nn_pred, use = "complete.obs")^2,
+    label = paste0(
+      "R² = ", round(R2, 2), "\n",
+      "MAE = ", round(MAE, 2), "\n",
+      "RMSE = ", round(RMSE, 2)
+    ),
+    .groups = "drop"
+  )
+
+library(ggplot2)
+ggplot(plot_df, aes(x = y, y = nn_pred)) +
+  geom_point(alpha = 0.3, color = "darkred") +
+  geom_abline(intercept = 0, slope = 1, color = "black", linetype = "dashed") +
+  facet_wrap(~ time_id, ncol = 3) +
+  geom_text(
+    data = stats_df,
+    aes(x = -Inf, y = Inf, label = label),
+    inherit.aes = FALSE,
+    hjust = -0.05,
+    vjust = 1.1,
+    size = 3.2
+  ) +
+  labs(
+    x = "Actual monthly crime count",
+    y = "Prediction from Neural Network model"
+  ) +
+  theme_minimal()
+
+
+
+
+
+
+
+
+
+
+
+
+
